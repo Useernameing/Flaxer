@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flazerx</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            flex-direction: column;
+        }
+        h1 {
+            color: purple;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .status {
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .Flazerx-select {
+            margin-top: 20px;
+        }
+        .Flazerx-select button {
+            background-color: #008CBA;
+        }
+        .Flazerx-select button:hover {
+            background-color: #007B9A;
+        }
+        .container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flazerx</h1>
+
+        <div class="Flazerx-select">
+            <button onclick="setFlazerx('back')">X</button>
+            <button onclick="setFlazerx('front')">Y</button>
+        </div>
+
+        <div>
+            <button onclick="startCapture()">İşleme Başla</button>
+            <button onclick="stopCapture()">İşlemi Durdur</button>
+        </div>
+
+        <div class="status" id="status">Durum: Bekliyor...</div>
+        <div id="lastImagePath" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        let FlazerxChoice = 'back';  
+        let captureInProgress = false;
+
+        function startCapture() {
+            if (captureInProgress) {
+                document.getElementById("status").innerText = "İşlem zaten devam ediyor!";
+                return;
+            }
+
+            document.getElementById("status").innerText = "İşlem başlatılıyor...";
+            fetch('/start')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === "Flazerx çekme işlemi başlatıldı!") {
+                        captureInProgress = true;
+                        document.getElementById("status").innerText = "Flazerx çekiliyor... Flazerx: " + FlazerxChoice;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("status").innerText = "Bir hata oluştu.";
+                });
+        }
+
+        function stopCapture() {
+            if (!captureInProgress) {
+                document.getElementById("status").innerText = "İşlem zaten durdurulmuş.";
+                return;
+            }
+
+            fetch('/stop')
+                .then(response => response.json())
+                .then(data => {
+                    captureInProgress = false;
+                    document.getElementById("status").innerText = "İşlem durduruldu!";
+                    if (data.last_image_path) {
+                        document.getElementById("lastImagePath").innerText = "Dizin: " + data.last_image_path;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("status").innerText = "Bir hata oluştu.";
+                });
+        }
+
+        function setFlazerx(Flazerx) {
+            FlazerxChoice = Flazerx;
+            fetch('/set_Flazerx', {
+                method: 'POST',
+            }).then(response => response.json())
+            .then(data => {
+                document.getElementById("status").innerText = "Flazerx seçildi: " + FlazerxChoice;
+            });
+        }
+    </script>
+</body>
+</html>
